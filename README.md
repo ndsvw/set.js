@@ -39,6 +39,7 @@ There are various Set functions available
 * `Set#union` return a new set that is the union of the set with another one.
 * `Set#intersect` return a new set that is the intersection of the set with another one.
 * `Set#difference` return a new set that is the difference of the set with another one.
+* `Set#symmetricDifference` return a new set that is the symmetric difference of the set with another one.
 
 * `Set#find` return an array with all items that match the predicate.
 
