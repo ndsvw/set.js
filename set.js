@@ -23,137 +23,149 @@ OFTWARE.
 
 var Set = function () {
 
-var value = true
-  , jsonify = function (item) {
-     if (typeof item === "object") {
-       return item = JSON.stringify(item)
-     }
-     return item;
+  var value = true
+    , jsonify = function (item) {
+       if (typeof item === "object") {
+         return item = JSON.stringify(item)
+       }
+       return item;
+    }
+    , unique = function(iset){
+        var set = Object.create(null)
+          , i = 0
+          , l = iset.length
+  
+        for(; i < l; i++) {
+          set[jsonify(iset[i])] = value
+        }
+  
+        return set
+    }
+  
+  var Set = function(input){
+    this._set = unique(input || [])
   }
-  , unique = function(iset){
-      var set = Object.create(null)
-        , i = 0
-        , l = iset.length
-
-      for(; i < l; i++) {
-        set[jsonify(iset[i])] = value
+  
+  Set.prototype.contains = function(prop){
+    return !!this._set[jsonify(prop)]
+  }
+  
+  Set.prototype.empty = function(){
+    return Object.keys(this._set).length == 0
+  }
+  
+  Set.prototype.size = function(){
+    return Object.keys(this._set).length
+  }
+  
+  Set.prototype.get = function(){
+    return Object.keys(this._set)
+  }
+  
+  Set.prototype.add = function(prop){
+    this._set[jsonify(prop)] = value
+  }
+  
+  Set.prototype.remove = function(prop){
+    delete this._set[jsonify(prop)]
+  }
+  
+  Set.prototype.union = function(iset){
+    return new Set(this.get().concat(iset.get()))
+  }
+  
+  
+  Set.prototype.intersect = function(iset){
+    var items = iset.get()
+      , i = 0
+      , l = items.length
+      , oset = new Set()
+      , prop
+  
+    for(; i < l; i++){
+      prop = items[i]
+      if(this.contains(prop)){
+        oset.add(prop)
       }
-
-      return set
-  }
-
-var Set = function(input){
-  this._set = unique(input || [])
-}
-
-Set.prototype.contains = function(prop){
-  return !!this._set[jsonify(prop)]
-}
-
-Set.prototype.empty = function(){
-  return Object.keys(this._set).length == 0
-}
-
-Set.prototype.size = function(){
-  return Object.keys(this._set).length
-}
-
-Set.prototype.get = function(){
-  return Object.keys(this._set)
-}
-
-Set.prototype.add = function(prop){
-  this._set[jsonify(prop)] = value
-}
-
-Set.prototype.remove = function(prop){
-  delete this._set[jsonify(prop)]
-}
-
-Set.prototype.union = function(iset){
-  return new Set(this.get().concat(iset.get()))
-}
-
-
-Set.prototype.intersect = function(iset){
-  var items = iset.get()
-    , i = 0
-    , l = items.length
-    , oset = new Set()
-    , prop
-
-  for(; i < l; i++){
-    prop = items[i]
-    if(this.contains(prop)){
-      oset.add(prop)
     }
-  }
-
-  items = this.get()
-
-  for(i = 0, l = items.length; i < l; i++){
-    prop = items[i]
-    if(iset.contains(prop)){
-      oset.add(prop)
+  
+    items = this.get()
+  
+    for(i = 0, l = items.length; i < l; i++){
+      prop = items[i]
+      if(iset.contains(prop)){
+        oset.add(prop)
+      }
     }
+  
+    return oset
   }
-
-  return oset
-}
-
-Set.prototype.difference = function(iset){
-  var items = iset.get()
-    , i = 0
-    , l = items.length
-    , oset = this.union(iset)
-    , prop
-
-  for(; i < l; i++){
-    prop = items[i]
-    if(this.contains(prop)){
-      oset.remove(prop)
-    }
+  
+  Set.prototype.symmetricDifference = function(iset){
+    // (A \ B) ∪ (B \ A)
+    return this.difference(iset).union(iset.difference(this));
   }
-
-  return oset
-}
-
-Set.prototype.subset = function(iset){
-  var items = iset.get()
-    , subset = false
-    , i = 0
-    , l = items.length
-
-  for(; i < l; i++){
-    prop = items[i]
-    if(this.contains(prop)){
-      subset = true
+  
+  Set.prototype.difference = function(iset){
+    /* From http://en.wikipedia.org/wiki/Set_theory
+     *   Set difference of U and A, denoted U \ A, is the set of all 
+     *   members of U that are not members of A. The set difference 
+     *   {1,2,3} \ {2,3,4} is {1} , while, conversely, the set difference
+     *   {2,3,4} \ {1,2,3} is {4}
+     */
+    var items = iset.get()
+      , i = 0
+      , l = items.length
+      , oset = new Set(this.get())
+      , prop
+  
+    for(; i < l; i++){
+      prop = items[i]
+      if(this.contains(prop)){
+        oset.remove(prop)
+      }
     }
-    else{
-      subset = false
-      break
-    }
+  
+    return oset
   }
-
-  return subset
-}
-
-Set.prototype.find = function(pred){
-  return this.get().filter(pred)
-}
-
-Set.prototype.clear = function(){
-  this._set = Object.create(null)
-}
-
-Set.unique = function(iset){
-  return Object.keys(unique(iset))
-}
-
-return Set
-
-}()
-
-if(typeof module === 'object' && module.hasOwnProperty('exports')){
-  module.exports = Set;
-}
+  
+  Set.prototype.subset = function(iset){
+    var items = iset.get()
+      , subset = false
+      , i = 0
+      , l = items.length
+  
+    for(; i < l; i++){
+      prop = items[i]
+      if(this.contains(prop)){
+        subset = true
+      }
+      else{
+        subset = false
+        break
+      }
+    }
+  
+    return subset
+  }
+  
+  Set.prototype.find = function(pred){
+    return this.get().filter(pred)
+  }
+  
+  Set.prototype.clear = function(){
+    this._set = Object.create(null)
+  }
+  
+  Set.unique = function(iset){
+    return Object.keys(unique(iset))
+  }
+  
+  return Set
+  
+  }()
+  
+  if(typeof module === 'object' && module.hasOwnProperty('exports')){
+    module.exports = Set;
+  }
+  
